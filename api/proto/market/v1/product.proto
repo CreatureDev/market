@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package market.v1;
+
+import "google/api/resource.proto";
+import "google/api/field_behavior.proto";
+
+
+message Product {
+	option (google.api.resource) = {
+		type: "market/Product"
+		pattern: "products/{uid}"
+		style: DECLARATIVE_FRIENDLY
+	};
+
+	string uid = 1;
+
+	// wallet/addr
+	// may need to make new message type
+	string owner = 2;
+
+	uint64 price = 3;
+
+	enum Denomination {
+		DROPS = 0;
+		XRP = 1;
+	}
+	Denomination denomination = 4;	
+
+	// Thing for purchase	
+	string file = 5;	
+}

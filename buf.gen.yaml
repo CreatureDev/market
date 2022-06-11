@@ -1,0 +1,29 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/CreatureDev/market/api
+    except:
+      - buf.build/googleapis/googleapis
+plugins:
+  - name: go
+    out: gen/go
+    opt: paths=source_relative
+    path: scripts/protoc-gen-go
+  - name: go-grpc
+    out: gen/go
+    opt: paths=source_relative
+    path: scripts/protoc-gen-go-grpc
+  - name: grpc-gateway
+    out: gen/go
+    opt:
+      - paths=source_relative
+      - generate_unbound_methods=true
+    path: scripts/protoc-gen-grpc-gateway
+  - name: openapiv2
+    out: gen/openapiv2
+    path: scripts/protoc-gen-openapiv2
+    opt:
+      - proto3_optional_nullable=true
+      - allow_merge=true
+      - merge_file_name=mrkt

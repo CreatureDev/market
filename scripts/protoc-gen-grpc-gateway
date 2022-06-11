@@ -1,0 +1,4 @@
+#!/bin/sh
+
+go run github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.7.2 "$@"
+

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package market.v1;
+
+import "market/v1/product.proto";
+import "google/api/annotations.proto";
+import "google/api/resource.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/httpbody.proto";
+
+service MarketService {
+	// Post new product to the market
+	rpc PostProduct (PostProductRequest) returns (PostProductResponse) {
+		option (google.api.http) = {
+			post: "/v1/products"
+			body: "product"
+		};
+		option (google.api.method_signature) = "product";
+	}
+
+	// Get existing product from the market
+	rpc GetProduct (GetProductRequest) returns (GetProductResponse) {
+		option (google.api.http) = {
+			get: "/v1/{product.uid=products/*}"
+		};
+		option (google.api.method_signature) = "product";
+	}
+
+	rpc ListProducts (ListProductsRequest) returns (ListProductsResponse) {
+		option (google.api.http) = {
+			get: "/v1/products"
+		};
+	}
+}
+
+message PostProductRequest {
+	Product product = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message PostProductResponse {
+	Product product = 1;
+}
+
+message GetProductRequest {
+	Product product = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetProductResponse {
+	Product product = 1;
+}
+
+message ListProductsRequest {
+	
+}
+	
+message ListProductsResponse {
+	repeated Product product = 1;
+}
+

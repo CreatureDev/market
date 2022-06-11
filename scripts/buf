@@ -1,0 +1,4 @@
+#!/bin/sh
+
+go run github.com/bufbuild/buf/cmd/buf@v1.3.1 "$@"
+

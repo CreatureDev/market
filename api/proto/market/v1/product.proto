@@ -19,14 +19,19 @@ message Product {
 	// may need to make new message type
 	string owner = 2;
 
-	uint64 price = 3;
-
+	
 	enum Denomination {
 		DROPS = 0;
 		XRP = 1;
+		ISSUED = 2;
 	}
-	Denomination denomination = 4;	
+	Denomination denomination = 3;	
+	optional string issuer = 4;
+	optional string currency = 5;
+	// could be int or float
+	string price = 6;
+
 
 	// Thing for purchase	
-	string file = 5;	
+	string file = 10;	
 }

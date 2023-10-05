@@ -103,22 +103,35 @@
             "type": "string"
           },
           {
-            "name": "product.price",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
             "name": "product.denomination",
             "in": "query",
             "required": false,
             "type": "string",
             "enum": [
               "DROPS",
-              "XRP"
+              "XRP",
+              "ISSUED"
             ],
             "default": "DROPS"
+          },
+          {
+            "name": "product.issuer",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.currency",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.price",
+            "description": "could be int or float.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "product.file",
@@ -139,7 +152,8 @@
       "type": "string",
       "enum": [
         "DROPS",
-        "XRP"
+        "XRP",
+        "ISSUED"
       ],
       "default": "DROPS"
     },
@@ -209,12 +223,20 @@
           "type": "string",
           "title": "wallet/addr\nmay need to make new message type"
         },
-        "price": {
-          "type": "string",
-          "format": "uint64"
-        },
         "denomination": {
           "$ref": "#/definitions/ProductDenomination"
+        },
+        "issuer": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "currency": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "price": {
+          "type": "string",
+          "title": "could be int or float"
         },
         "file": {
           "type": "string",

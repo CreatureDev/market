@@ -18,11 +18,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MarketServiceClient interface {
-	// Post new product to the market
-	PostProduct(ctx context.Context, in *PostProductRequest, opts ...grpc.CallOption) (*PostProductResponse, error)
 	// Get existing product from the market
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error)
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
+	PurchaseProduct(ctx context.Context, in *PurchaseProductRequest, opts ...grpc.CallOption) (*PurchaseProductResponse, error)
+	RegisterPublisher(ctx context.Context, in *RegisterPublisherRequest, opts ...grpc.CallOption) (*RegisterPublisherResponse, error)
+	CheckMarketHealth(ctx context.Context, in *CheckMarketHealthRequest, opts ...grpc.CallOption) (*CheckMarketHealthResponse, error)
 }
 
 type marketServiceClient struct {
@@ -31,15 +32,6 @@ type marketServiceClient struct {
 
 func NewMarketServiceClient(cc grpc.ClientConnInterface) MarketServiceClient {
 	return &marketServiceClient{cc}
-}
-
-func (c *marketServiceClient) PostProduct(ctx context.Context, in *PostProductRequest, opts ...grpc.CallOption) (*PostProductResponse, error) {
-	out := new(PostProductResponse)
-	err := c.cc.Invoke(ctx, "/market.v1.MarketService/PostProduct", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *marketServiceClient) GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error) {
@@ -60,15 +52,43 @@ func (c *marketServiceClient) ListProducts(ctx context.Context, in *ListProducts
 	return out, nil
 }
 
+func (c *marketServiceClient) PurchaseProduct(ctx context.Context, in *PurchaseProductRequest, opts ...grpc.CallOption) (*PurchaseProductResponse, error) {
+	out := new(PurchaseProductResponse)
+	err := c.cc.Invoke(ctx, "/market.v1.MarketService/PurchaseProduct", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *marketServiceClient) RegisterPublisher(ctx context.Context, in *RegisterPublisherRequest, opts ...grpc.CallOption) (*RegisterPublisherResponse, error) {
+	out := new(RegisterPublisherResponse)
+	err := c.cc.Invoke(ctx, "/market.v1.MarketService/RegisterPublisher", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *marketServiceClient) CheckMarketHealth(ctx context.Context, in *CheckMarketHealthRequest, opts ...grpc.CallOption) (*CheckMarketHealthResponse, error) {
+	out := new(CheckMarketHealthResponse)
+	err := c.cc.Invoke(ctx, "/market.v1.MarketService/CheckMarketHealth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MarketServiceServer is the server API for MarketService service.
 // All implementations must embed UnimplementedMarketServiceServer
 // for forward compatibility
 type MarketServiceServer interface {
-	// Post new product to the market
-	PostProduct(context.Context, *PostProductRequest) (*PostProductResponse, error)
 	// Get existing product from the market
 	GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error)
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
+	PurchaseProduct(context.Context, *PurchaseProductRequest) (*PurchaseProductResponse, error)
+	RegisterPublisher(context.Context, *RegisterPublisherRequest) (*RegisterPublisherResponse, error)
+	CheckMarketHealth(context.Context, *CheckMarketHealthRequest) (*CheckMarketHealthResponse, error)
 	mustEmbedUnimplementedMarketServiceServer()
 }
 
@@ -76,14 +96,20 @@ type MarketServiceServer interface {
 type UnimplementedMarketServiceServer struct {
 }
 
-func (UnimplementedMarketServiceServer) PostProduct(context.Context, *PostProductRequest) (*PostProductResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PostProduct not implemented")
-}
 func (UnimplementedMarketServiceServer) GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProduct not implemented")
 }
 func (UnimplementedMarketServiceServer) ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProducts not implemented")
+}
+func (UnimplementedMarketServiceServer) PurchaseProduct(context.Context, *PurchaseProductRequest) (*PurchaseProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PurchaseProduct not implemented")
+}
+func (UnimplementedMarketServiceServer) RegisterPublisher(context.Context, *RegisterPublisherRequest) (*RegisterPublisherResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterPublisher not implemented")
+}
+func (UnimplementedMarketServiceServer) CheckMarketHealth(context.Context, *CheckMarketHealthRequest) (*CheckMarketHealthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckMarketHealth not implemented")
 }
 func (UnimplementedMarketServiceServer) mustEmbedUnimplementedMarketServiceServer() {}
 
@@ -96,24 +122,6 @@ type UnsafeMarketServiceServer interface {
 
 func RegisterMarketServiceServer(s grpc.ServiceRegistrar, srv MarketServiceServer) {
 	s.RegisterService(&MarketService_ServiceDesc, srv)
-}
-
-func _MarketService_PostProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PostProductRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MarketServiceServer).PostProduct(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/market.v1.MarketService/PostProduct",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MarketServiceServer).PostProduct(ctx, req.(*PostProductRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _MarketService_GetProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -152,6 +160,60 @@ func _MarketService_ListProducts_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MarketService_PurchaseProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PurchaseProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketServiceServer).PurchaseProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/market.v1.MarketService/PurchaseProduct",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketServiceServer).PurchaseProduct(ctx, req.(*PurchaseProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MarketService_RegisterPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterPublisherRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketServiceServer).RegisterPublisher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/market.v1.MarketService/RegisterPublisher",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketServiceServer).RegisterPublisher(ctx, req.(*RegisterPublisherRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MarketService_CheckMarketHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckMarketHealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketServiceServer).CheckMarketHealth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/market.v1.MarketService/CheckMarketHealth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketServiceServer).CheckMarketHealth(ctx, req.(*CheckMarketHealthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MarketService_ServiceDesc is the grpc.ServiceDesc for MarketService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -160,16 +222,24 @@ var MarketService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MarketServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "PostProduct",
-			Handler:    _MarketService_PostProduct_Handler,
-		},
-		{
 			MethodName: "GetProduct",
 			Handler:    _MarketService_GetProduct_Handler,
 		},
 		{
 			MethodName: "ListProducts",
 			Handler:    _MarketService_ListProducts_Handler,
+		},
+		{
+			MethodName: "PurchaseProduct",
+			Handler:    _MarketService_PurchaseProduct_Handler,
+		},
+		{
+			MethodName: "RegisterPublisher",
+			Handler:    _MarketService_RegisterPublisher_Handler,
+		},
+		{
+			MethodName: "CheckMarketHealth",
+			Handler:    _MarketService_CheckMarketHealth_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

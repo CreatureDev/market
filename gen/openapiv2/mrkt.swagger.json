@@ -7,6 +7,9 @@
   "tags": [
     {
       "name": "MarketService"
+    },
+    {
+      "name": "PublisherService"
     }
   ],
   "consumes": [
@@ -33,37 +36,6 @@
             }
           }
         },
-        "tags": [
-          "MarketService"
-        ]
-      },
-      "post": {
-        "summary": "Post new product to the market",
-        "operationId": "MarketService_PostProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1PostProductResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1Product"
-            }
-          }
-        ],
         "tags": [
           "MarketService"
         ]
@@ -96,8 +68,15 @@
             "pattern": "products/[^/]+"
           },
           {
-            "name": "product.owner",
-            "description": "wallet/addr\nmay need to make new message type.",
+            "name": "product.publisher",
+            "description": "address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.taxon",
+            "description": "NFT Taxon identifying purchasers.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -129,6 +108,101 @@
           {
             "name": "product.price",
             "description": "could be int or float.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.standardPrice",
+            "description": "differentiate standard and current price to denote sales.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.file",
+            "description": "Thing for purchase.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MarketService"
+        ]
+      },
+      "post": {
+        "operationId": "MarketService_PurchaseProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PurchaseProductResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "product.uid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "products/[^/]+"
+          },
+          {
+            "name": "product.publisher",
+            "description": "address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.taxon",
+            "description": "NFT Taxon identifying purchasers.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.denomination",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "DROPS",
+              "XRP",
+              "ISSUED"
+            ],
+            "default": "DROPS"
+          },
+          {
+            "name": "product.issuer",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.currency",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.price",
+            "description": "could be int or float.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product.standardPrice",
+            "description": "differentiate standard and current price to denote sales.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -186,7 +260,29 @@
         }
       }
     },
+    "v1CheckMarketHealthResponse": {
+      "type": "object"
+    },
+    "v1CreatePurchaseOrderResponse": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "$ref": "#/definitions/v1Product"
+        },
+        "nft": {
+          "type": "string"
+        }
+      }
+    },
     "v1GetProductResponse": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "$ref": "#/definitions/v1Product"
+        }
+      }
+    },
+    "v1GetPublishedProductResponse": {
       "type": "object",
       "properties": {
         "product": {
@@ -205,11 +301,14 @@
         }
       }
     },
-    "v1PostProductResponse": {
+    "v1ListPublishedProductsResponse": {
       "type": "object",
       "properties": {
-        "product": {
-          "$ref": "#/definitions/v1Product"
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Product"
+          }
         }
       }
     },
@@ -219,9 +318,13 @@
         "uid": {
           "type": "string"
         },
-        "owner": {
+        "publisher": {
           "type": "string",
-          "title": "wallet/addr\nmay need to make new message type"
+          "title": "address"
+        },
+        "taxon": {
+          "type": "string",
+          "title": "NFT Taxon identifying purchasers"
         },
         "denomination": {
           "$ref": "#/definitions/ProductDenomination"
@@ -238,11 +341,29 @@
           "type": "string",
           "title": "could be int or float"
         },
+        "standardPrice": {
+          "type": "string",
+          "title": "differentiate standard and current price to denote sales"
+        },
         "file": {
           "type": "string",
           "title": "Thing for purchase"
         }
       }
+    },
+    "v1PurchaseProductResponse": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "$ref": "#/definitions/v1Product"
+        },
+        "nft": {
+          "type": "string"
+        }
+      }
+    },
+    "v1RegisterPublisherResponse": {
+      "type": "object"
     }
   }
 }

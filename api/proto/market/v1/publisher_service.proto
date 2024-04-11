@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package market.v1;
+
+import "market/v1/product.proto";
+import "google/api/annotations.proto";
+import "google/api/resource.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/httpbody.proto";
+
+service PublisherService {
+	rpc ListPublishedProducts(ListPublishedProductsRequest) returns(ListPublishedProductsResponse) {
+	}
+
+	rpc GetPublishedProduct(GetPublishedProductRequest) returns (GetPublishedProductResponse) {
+	}
+
+	rpc CreatePurchaseOrder(CreatePurchaseOrderRequest) returns (CreatePurchaseOrderResponse){
+	}
+}
+
+message CreatePurchaseOrderRequest {
+	Product product = 1 [(google.api.field_behavior) = REQUIRED];
+	string destination = 2;
+}
+
+message CreatePurchaseOrderResponse {
+	Product product = 1;
+	string nft = 2;
+}
+
+message GetPublishedProductRequest {
+	Product product = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetPublishedProductResponse {
+	Product product = 1;
+}
+
+message ListPublishedProductsRequest {
+	
+}
+	
+message ListPublishedProductsResponse {
+	repeated Product products = 1;
+}
+

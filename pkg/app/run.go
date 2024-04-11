@@ -9,7 +9,7 @@ import (
 
 	marketv1 "github.com/CreatureDev/market/gen/go/market/v1"
 	"github.com/CreatureDev/market/pkg/config"
-	"github.com/CreatureDev/market/pkg/market"
+	"github.com/CreatureDev/market/pkg/service"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	errors "golang.org/x/xerrors"
 )
@@ -24,7 +24,7 @@ func Run(conf config.Config) error {
 
 	mux := runtime.NewServeMux()
 
-	if err := marketv1.RegisterMarketServiceHandlerServer(marketContext, mux, market.NewService(conf)); err != nil {
+	if err := marketv1.RegisterMarketServiceHandlerServer(marketContext, mux, service.NewMarketService(conf)); err != nil {
 		return errors.Errorf("failed to register market MarketService handler: %w", err)
 	}
 

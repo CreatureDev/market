@@ -24,15 +24,28 @@ service MarketService {
 		};
 	}
 
-	rpc PurchaseProduct (PurchaseProductRequest) returns (PurchaseProductResponse)
+	rpc PurchaseProduct (PurchaseProductRequest) returns (PurchaseProductResponse) {
+		option (google.api.http) = {
+			post: "/v1/{product.uid=products/*}"
+		};
+	}
+	
+	rpc RegisterPublisher (RegisterPublisherRequest) returns (RegisterPublisherResponse) {
+
+	}
+
+	rpc CheckMarketHealth(CheckMarketHealthRequest) returns (CheckMarketHealthResponse) {
+
+	}
 }
 
-message PostProductRequest {
+message PurchaseProductRequest {
 	Product product = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
-message PostProductResponse {
+message PurchaseProductResponse {
 	Product product = 1;
+	string nft = 2;
 }
 
 message GetProductRequest {
@@ -49,5 +62,24 @@ message ListProductsRequest {
 	
 message ListProductsResponse {
 	repeated Product product = 1;
+}
+
+message RegisterPublisherRequest {
+	// account
+	string account = 1;
+	// server connection
+	string connection = 2;
+}
+
+message RegisterPublisherResponse {
+
+}
+
+message CheckMarketHealthRequest {
+
+}
+
+message CheckMarketHealthResponse {
+
 }
 

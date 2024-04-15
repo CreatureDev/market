@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/CreatureDev/market/pkg/nft"
 	binarycodec "github.com/CreatureDev/xrpl-go/binary-codec"
@@ -102,7 +103,7 @@ func TestBuyToken(t *testing.T) {
 	target := testBuyerAcc.Account
 	assert.NotEqual(t, minter.GetAccount(), target)
 	config := nft.NFTokenMintConfig{
-		NFTokenTaxon: 2,
+		NFTokenTaxon: 3,
 		URIGenerator: nft.ConstantURIGenerator(types.NFTokenURI("00")),
 		Flags:        types.NewFlag().SetFlag(types.FtfBurnable),
 		Price:        types.XRPCurrencyAmount(50),
@@ -149,11 +150,59 @@ func TestBuyToken(t *testing.T) {
 }
 
 func TestExpireSale(t *testing.T) {
-
+	minter := testMinter(testMinterAcc)
+	target := testBuyerAcc.Account
+	assert.NotEqual(t, minter.GetAccount(), target)
+	config := nft.NFTokenMintConfig{
+		NFTokenTaxon: 4,
+		URIGenerator: nft.ConstantURIGenerator(types.NFTokenURI("00")),
+		Flags:        types.NewFlag().SetFlag(types.FtfBurnable),
+		Price:        types.XRPCurrencyAmount(50),
+		Timeout:      5,
+	}
+	resetNFTs(t, minter, config)
+	preMint := minter.GetValidNFT(config)
+	assert.Empty(t, preMint)
+	id, err := minter.GetOrMintNFT(config)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+	hash, err := minter.SellNFT(config, target)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, hash)
+	time.Sleep(5 * time.Second)
+	err = minter.CancelExpiredNFTSales()
+	assert.Nil(t, err)
+	sales, err := minter.SellOffersForNFT(hash)
+	assert.Nil(t, err)
+	assert.Empty(t, sales)
+	id = minter.GetValidNFT(config)
+	assert.NotEmpty(t, id)
+	assert.Nil(t, err)
+	err = minter.BurnNFT(hash)
+	assert.Nil(t, err)
 }
 
 func TestGetValidNFT(t *testing.T) {
-
+	minter := testMinter(testMinterAcc)
+	target := testBuyerAcc.Account
+	assert.NotEqual(t, minter.GetAccount(), target)
+	config := nft.NFTokenMintConfig{
+		NFTokenTaxon: 5,
+		URIGenerator: nft.ConstantURIGenerator(types.NFTokenURI("00")),
+		Flags:        types.NewFlag().SetFlag(types.FtfBurnable),
+		Price:        types.XRPCurrencyAmount(50),
+	}
+	resetNFTs(t, minter, config)
+	preMint := minter.GetValidNFT(config)
+	assert.Empty(t, preMint)
+	id, err := minter.GetOrMintNFT(config)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+	id2 := minter.GetValidNFT(config)
+	assert.Nil(t, err)
+	assert.Equal(t, id, id2)
+	err = minter.BurnNFT(id)
+	assert.Nil(t, err)
 }
 
 func testMinter(acc testAccount) *nft.NFTokenMinter {

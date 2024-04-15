@@ -1,5 +1,5 @@
-github.com/CreatureDev/xrpl-go v0.0.0-20240411181627-17853cf69e3d h1:vRTBLdKopGLhv2JW5oaM9trEI0v8xHcPl+nglmgMOeU=
-github.com/CreatureDev/xrpl-go v0.0.0-20240411181627-17853cf69e3d/go.mod h1:/ApGAaDEMwHnN7kGubFq6cQhKPXMtx31lVFvvSb1L9c=
+github.com/CreatureDev/xrpl-go v0.0.0-20240415233601-cb7fc925d612 h1:rc+jdhJHANYWaYMDGmeLFO7+aub9EzyxFgm+0JvzXK0=
+github.com/CreatureDev/xrpl-go v0.0.0-20240415233601-cb7fc925d612/go.mod h1:/ApGAaDEMwHnN7kGubFq6cQhKPXMtx31lVFvvSb1L9c=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

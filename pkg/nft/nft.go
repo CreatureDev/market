@@ -1,21 +1,19 @@
 package nft
 
 import (
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	binarycodec "github.com/CreatureDev/xrpl-go/binary-codec"
 	"github.com/CreatureDev/xrpl-go/client"
 	"github.com/CreatureDev/xrpl-go/keypairs"
 	"github.com/CreatureDev/xrpl-go/model/client/account"
 	"github.com/CreatureDev/xrpl-go/model/client/common"
-	ledgerCl "github.com/CreatureDev/xrpl-go/model/client/ledger"
 	"github.com/CreatureDev/xrpl-go/model/client/path"
 	txCl "github.com/CreatureDev/xrpl-go/model/client/transactions"
 	"github.com/CreatureDev/xrpl-go/model/ledger"
 	"github.com/CreatureDev/xrpl-go/model/transactions"
 	"github.com/CreatureDev/xrpl-go/model/transactions/types"
-	"golang.org/x/exp/slices"
 )
 
 type NFTokenURIGenerator func() types.NFTokenURI
@@ -96,6 +94,9 @@ func (minter *NFTokenMinter) SellOffersForNFT(id types.NFTokenID) ([]path.NFToke
 	}
 	offersResponse, _, err := minter.client.Path.NFTokenSellOffers(&offersRequest)
 	if err != nil {
+		if strings.Contains(err.Error(), "objectNotFound") {
+			return []path.NFTokenOffer{}, nil
+		}
 		return nil, fmt.Errorf("fetch sell offers: %w", err)
 	}
 	offers := offersResponse.Offers
@@ -110,70 +111,68 @@ func (minter *NFTokenMinter) SellOffersForNFT(id types.NFTokenID) ([]path.NFToke
 	return offers, nil
 }
 
-func (minter *NFTokenMinter) CancelExpiredNFTSales(configs []NFTokenMintConfig) error {
-	nftsRequest := account.AccountNFTsRequest{
-		Account: minter.account,
+func (minter *NFTokenMinter) getAccountObjects(addr types.Address, kind account.AccountObjectType) ([]ledger.LedgerObject, error) {
+	objsReq := &account.AccountObjectsRequest{
+		Account: addr,
+		Type:    kind,
 	}
+	objsRes, _, err := minter.client.Account.AccountObjects(objsReq)
+	if err != nil {
+		return nil, err
+	}
+	return objsRes.AccountObjects, nil
+}
 
-	nftsResponse, _, err := minter.client.Account.AccountNFTs(&nftsRequest)
+func (minter *NFTokenMinter) CancelExpiredNFTSales() error {
+	objs, err := minter.getAccountObjects(minter.account, account.NFTOfferObject)
 	if err != nil {
 		return err
 	}
-	nfts := nftsResponse.AccountNFTs
-	for nftsResponse.Marker != nil {
-		nftsRequest.Marker = nftsResponse.Marker
-		nftsResponse, _, err = minter.client.Account.AccountNFTs(&nftsRequest)
-		nfts = append(nfts, nftsResponse.AccountNFTs...)
-	}
-	var taxons []uint
-	for _, c := range configs {
-		taxons = append(taxons, c.NFTokenTaxon)
-	}
 
+	curTime := common.CurrentRippleTime()
 	var expired []types.Hash256
-	for _, n := range nfts {
-		if !slices.Contains(taxons, n.NFTokenTaxon) {
+	for _, obj := range objs {
+		offer, ok := obj.(*ledger.NFTokenOffer)
+		if !ok {
 			continue
 		}
-		offers, err := minter.SellOffersForNFT(n.NFTokenID)
-		if err != nil {
-			return err
-		}
-		for _, nftOffer := range offers {
-			entryRequest := ledgerCl.LedgerEntryRequest{
-				Offer: ledgerCl.EntryString(nftOffer.NFTokenOfferIndex),
-			}
-			entryResponse, _, err := minter.client.Ledger.LedgerEntry(&entryRequest)
-			if err != nil {
-				return err
-			}
-			obj, ok := entryResponse.Node.(*ledger.NFTokenOffer)
-			if !ok {
-				return fmt.Errorf("unexpected nft offer format")
-			}
-			if obj.Expiration < common.CurrentRippleTime() {
-				expired = append(expired, types.Hash256(nftOffer.NFTokenOfferIndex))
-			}
+		if offer.Expiration != 0 && offer.Expiration < curTime {
+			expired = append(expired, types.Hash256(offer.Index))
 		}
 	}
+	if len(expired) == 0 {
+		return nil
+	}
+
 	cancelOfferTx := transactions.NFTokenCancelOffer{
 		BaseTx: transactions.BaseTx{
-			Account: minter.account,
+			Account:       minter.account,
+			SigningPubKey: minter.pubKey,
 		},
 		NFTokenOffers: expired,
 	}
 	// TODO resubmit on failed TX attempts
 	// make submit helper function (autofills/signs until success or too many failures)
 	minter.client.AutofillTx(minter.account, &cancelOfferTx)
-	blob, _ := binarycodec.EncodeForSigning(&cancelOfferTx)
+	blob, err := binarycodec.EncodeForSigning(&cancelOfferTx)
+	if err != nil {
+		return fmt.Errorf("encoding cancel offer tx for signing: %w", err)
+	}
 	sig, _ := keypairs.Sign(blob, minter.privKey)
 	cancelOfferTx.BaseTx.TxnSignature = sig
-	tx, _ := binarycodec.Encode(&cancelOfferTx)
+	fmt.Printf("TX: %+v\n\n", cancelOfferTx)
+	tx, err := binarycodec.Encode(&cancelOfferTx)
+	if err != nil {
+		return fmt.Errorf("encoding cancel offer tx for submitting: %w", err)
+	}
 	submitReq := txCl.SubmitRequest{
 		TxBlob: tx,
 	}
 	_, _, err = minter.client.Transaction.Submit(&submitReq)
-	return err
+	if err != nil {
+		return fmt.Errorf("submiting cancel offer tx: %w", err)
+	}
+	return nil
 }
 
 func (minter *NFTokenMinter) GetValidNFT(conf NFTokenMintConfig) types.NFTokenID {
@@ -313,8 +312,6 @@ func (minter *NFTokenMinter) BurnNFT(id types.NFTokenID) error {
 	blob, _ := binarycodec.EncodeForSigning(burnTx)
 	sig, _ := keypairs.Sign(blob, minter.privKey)
 	burnTx.BaseTx.TxnSignature = sig
-	s, _ := json.MarshalIndent(burnTx, "", "\t")
-	fmt.Printf("Tx %s\n", string(s))
 	tx, _ := binarycodec.Encode(burnTx)
 	submitReq := txCl.SubmitRequest{
 		TxBlob: tx,

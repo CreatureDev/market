@@ -2,14 +2,12 @@ package nft
 
 import (
 	"fmt"
-	"strings"
 
 	binarycodec "github.com/CreatureDev/xrpl-go/binary-codec"
 	"github.com/CreatureDev/xrpl-go/client"
 	"github.com/CreatureDev/xrpl-go/keypairs"
 	"github.com/CreatureDev/xrpl-go/model/client/account"
 	"github.com/CreatureDev/xrpl-go/model/client/common"
-	"github.com/CreatureDev/xrpl-go/model/client/path"
 	txCl "github.com/CreatureDev/xrpl-go/model/client/transactions"
 	"github.com/CreatureDev/xrpl-go/model/ledger"
 	"github.com/CreatureDev/xrpl-go/model/transactions"
@@ -84,31 +82,8 @@ func NewNFTokenMinter(cl *client.XRPLClient, acc types.Address, priv string, pub
 }
 
 func (minter *NFTokenMinter) NFTIsValid(id types.NFTokenID) bool {
-	offers, _ := minter.SellOffersForNFT(id)
+	offers, _ := SellOffersForNFT(minter.client, id)
 	return len(offers) == 0
-}
-
-func (minter *NFTokenMinter) SellOffersForNFT(id types.NFTokenID) ([]path.NFTokenOffer, error) {
-	offersRequest := path.NFTokenSellOffersRequest{
-		NFTokenID: id,
-	}
-	offersResponse, _, err := minter.client.Path.NFTokenSellOffers(&offersRequest)
-	if err != nil {
-		if strings.Contains(err.Error(), "objectNotFound") {
-			return []path.NFTokenOffer{}, nil
-		}
-		return nil, fmt.Errorf("fetch sell offers: %w", err)
-	}
-	offers := offersResponse.Offers
-	for offersResponse.Marker != nil {
-		offersRequest.Marker = offersResponse.Marker
-		offersResponse, _, err := minter.client.Path.NFTokenSellOffers(&offersRequest)
-		if err != nil {
-			return nil, fmt.Errorf("fetch pages sell offers: %w", err)
-		}
-		offers = append(offers, offersResponse.Offers...)
-	}
-	return offers, nil
 }
 
 func (minter *NFTokenMinter) getAccountObjects(addr types.Address, kind account.AccountObjectType) ([]ledger.LedgerObject, error) {

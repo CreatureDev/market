@@ -9,4 +9,4 @@ Users can then purchase access to these published products using the specified c
 Distributors host the products on their servers
 Space on a distributor can be rented by a publisher, or they may setup their own distributors
 
-
+![diagram](https://github.com/CreatureDev/market/blob/master/doc/diagram.png?raw=true)
